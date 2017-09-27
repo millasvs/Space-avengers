@@ -1,0 +1,33 @@
+<html>
+    
+    <head>
+        <link rel="stylesheet" href="style.css"/>
+        <title>Spel!</title>
+        <script src="libs/phaser.min.js"></script>
+        <script src="src/main.js"></script>
+    </head>
+    
+    <body>
+        
+        <h1>Ett litet spel</h1>
+        <div id="gameContainer" align="center"> 
+            <script>
+                /*new Game(width, height, renderer, parent, state, transparent, antialias, physicsConfig) 
+                var game = new Phaser.Game(width, height, graphicsMode, divId);*/
+
+                console.log("Hello world")
+                var game = new Phaser.Game(1200, 600, Phaser.AUTO, 'gameContainer');
+                
+                // Register Game States
+                game.state.add('MainGame', main);
+
+                // Start with the MainGame State
+                game.state.start("MainGame");                
+                
+            </script>
+        </div>
+        
+    </body>
+    
+    
+</html>
