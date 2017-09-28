@@ -5,6 +5,7 @@
         <title>Spel!</title>
         <script src="libs/phaser.min.js"></script>
         <script src="src/main.js"></script>
+        <script src="src/gameover.js"></script>
     </head>
     
     <body>
@@ -20,10 +21,10 @@
                 
                 // Register Game States
                 game.state.add('MainGame', main);
+                game.state.add('GameOver', gameover);
 
                 // Start with the MainGame State
-                game.state.start("MainGame");                
-                
+                game.state.start("MainGame");
             </script>
         </div>
         
