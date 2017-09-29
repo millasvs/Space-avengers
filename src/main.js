@@ -4,23 +4,27 @@ const highSpeedAsteroid = 600;
 const baseSpeedPlayer = 200;
 const highSpeedPlayer = 400;
 const bulletSpeed = 800;
-var asteroidnames;
-var zbtn = Phaser.Keyboard.Z;
-var shiftKey = Phaser.Keyboard.SHIFT;
-var abtn = Phaser.Keyboard.A;
-var minTimeBetweenPlayerShots = 0.5;
+const zbtn = Phaser.Keyboard.Z;
+const shiftKey = Phaser.Keyboard.SHIFT;
+const abtn = Phaser.Keyboard.A;
+const minTimeBetweenPlayerShots = 0.5;
 
-var numLives = 2;
+var asteroidnames;
+//var firesounds;
+
+var numLives = 20;
 var playerscore = 0;
+
+var diffLives = 0;
+var diffScore = 0;
 
 
 var main = {
     
     preload: function () {
         console.log("preloading");
-//        this.game.load.image("space-bg", "assets/images/Space-Background-NP51.jpg");
+
         this.game.load.image("space-bg", "assets/images/tileable-classic-nebula-3120072-o.jpg");
-        
         
         this.game.load.image("player-ship", "assets/images/ship2.png");
         
@@ -29,16 +33,26 @@ var main = {
         this.game.load.image("asteroid-normal", "assets/images/normalasteroid.png");
         this.game.load.image("asteroid-boring", "assets/images/boringasteroid.png");
         this.game.load.image("asteroid-pretty-normal", "assets/images/planet-trans-asteroid.png");
-        this.game.load.image("alien", "assets/images/Alien-PNG-Photo.png");
+        this.game.load.image("heart", "assets/images/Alien-PNG-Photo.png");
         
         this.game.load.image("explosion", "assets/images/explosionNotFullSmall.png");
         
-        
         this.game.load.image("laser", "assets/images/bullet-laser.png");
+        this.game.load.image("plasma", "assets/images/bullet-plasma.png");
+
+        
+        this.game.load.audio("fire1", "assets/audio/player_fire_01.mp3")
+        this.game.load.audio("fire2", "assets/audio/player_fire_02.mp3")
+        this.game.load.audio("fire3", "assets/audio/player_fire_03.mp3")
+        this.game.load.audio("fire4", "assets/audio/player_fire_04.mp3")
+        this.game.load.audio("fire5", "assets/audio/player_fire_05.mp3")
+        this.game.load.audio("fire6", "assets/audio/player_fire_06.mp3")
+
         
         asteroidnames = ['asteroid-black', 'asteroid-cool', 'asteroid-normal',
-                    'asteroid-boring', 'asteroid-pretty-normal', 'alien'];
+                    'asteroid-boring', 'asteroid-pretty-normal', 'heart'];
         
+        //firesounds = ['fire1', 'fire2', 'fire3', 'fire4', 'fire5', 'fire6'];
     
     },
     
@@ -47,15 +61,12 @@ var main = {
       
         this.game.debug.body(this.player_ship);
         this.player_ship.body.debug = true;
-//        this.player_ship.debug.body();
         
         for(var i = 0; i < this.asteroids.children.length; i++){
-            this.game.debug.body(this.asteroids.children[i]);
             this.asteroids.children[i].body.debug = true;
         }
 
         for(var i = 0; i < this.bullets.children.length; i++){
-            this.game.debug.body(this.bullets.children[i]);
             this.bullets.children[i].body.debug = true;
         }
         
@@ -66,33 +77,40 @@ var main = {
 This is where you can place objects in the scene or setup a user interface before the scene is shown to the player.*/
     create: function () {
 
-//        this.game.physics.startSystem(Phaser.Physics.ARCADE);
-        
-        //this.game.physics.startSystem(Phaser.Physics.p2);
-        
         this.game.physics.startSystem(Phaser.Physics.P2JS)
-//        game.physics.p2.defaultRestitution = 0.8				// Default Restitution 
         this.game.physics.p2.setImpactEvents(true);
-
-        this.playerCollGroup = game.physics.p2.createCollisionGroup();
-        //this.game.add.sprite(-300, 0, 'space-bg');
         this.background = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'space-bg');
+
+        var infosquare = "Lives: " + numLives + " Score: " + playerscore;
+        this.text = game.add.text(0, 0, infosquare, {fill: "white"});        
+        this.text.setText("Lives: " + numLives + " Score: " + playerscore);
+
+        console.log("size of the this.game - w: " + this.game.width + " h: " + this.game.height);
+
+        this.cursors = this.game.input.keyboard.createCursorKeys();    
+
+        
+        this.playerCollGroup = game.physics.p2.createCollisionGroup();
+        this.asteroidCollGroup = game.physics.p2.createCollisionGroup();
+        this.bulletCollGroup = game.physics.p2.createCollisionGroup();
+        this.particleCollGroup = game.physics.p2.createCollisionGroup();
+        
         
         this.player_ship = this.game.add.sprite(this.game.width * 0.5, this.game.height * 0.5, 'player-ship');
-        
         this.player_ship.scale.x = 0.75;
         this.player_ship.scale.y = 0.75;        
         this.player_ship.anchor.setTo(0.5, 0.5);
-//        this.game.physics.arcade.enable(this.player_ship);
-        
-        this.game.physics.p2.enable(this.player_ship);
+        this.game.physics.p2.enable(this.player_ship);        
+        this.player_ship.body.fixedRotation = true;
+
+        enemyship.create();
         
         this.player_ship.body.setCollisionGroup(this.playerCollGroup);
+        this.player_ship.body.collides(this.asteroidCollGroup, main.ouch, this);
+        this.player_ship.body.collides(enemyship.enemyBulletCollGroup);
+        this.invulnerableTimer = 0.0;
+
         
-        
-        console.log("size of the this.game - w: " + this.game.width + " h: " + this.game.height);
-        
-        this.cursors = this.game.input.keyboard.createCursorKeys();    
         this.asteroidTimer = 2.0;
         this.asteroids = game.add.group();
         this.asteroids.enableBody = true;
@@ -102,33 +120,20 @@ This is where you can place objects in the scene or setup a user interface befor
         this.bullets = game.add.group();
         this.bullets.enableBody = true;
         this.bullets.physicsBodyType = Phaser.Physics.P2JS;
-
-        this.player_ship.body.fixedRotation = true;
-
         this.fireTimer = minTimeBetweenPlayerShots;
-
-        this.invulnerableTimer = 0.0;
-        this.particleDestroyTimer = 0.0;
-        
-        this.enemyShipSpawnTimer = 3*60;
-        this.enemyShipMoveTimer = 0.0;
-        
-        var infosquare = "Lives: " + numLives + " Score: " + playerscore;
-        this.text = game.add.text(0, 0, infosquare, {fill: "white"});
-
-        
-        this.asteroidCollGroup = game.physics.p2.createCollisionGroup();
-        this.bulletCollGroup = game.physics.p2.createCollisionGroup();
-        this.particleCollGroup = game.physics.p2.createCollisionGroup();
-        
-
-        
-        
-        this.player_ship.body.collides(this.asteroidCollGroup, main.ouch, this);
+                
         
         this.particles = game.add.group();
         this.particles.enableBody = true;
         this.particles.physicsBodyType = Phaser.Physics.P2JS;
+        this.particleDestroyTimer = 0.0;
+        
+/*        this.sounds = game.add.group();
+        
+        for(var i = 0; i < firesounds.length; i++){
+            var sound = game.add.audio(firesounds[i]);
+            this.sounds.add(sound);
+        }*/
         
     },
     
@@ -192,25 +197,33 @@ This is where you can place objects in the scene or setup a user interface befor
             this.player_ship.body.velocity.x = 0;
             this.player_ship.body.velocity.y = 0;
         }
+
         
     },
     
-    spawnEnemyShip: function () {
+/*
+    checkPlayer: function () {
         
-        this.enemyship = this.game.add.sprite(this.game.width, Math.random()*this.game.height, 'player-ship');
-        this.enemyShipSpawnTimer = 3*60;
-    },
-    
-    updateEnemyShip: function () {
-    
+        var shipX = this.player_ship.centerX,
+            shipY = this.player_ship.centerY;
+      
+        if (shipX > this.game.width || shipX < 0) {
+            this.player_ship.body.velocity.x = 0;
+            this.player_ship.body.velocity.y = 0;
+        }
+        if ((shipY > this.game.height) || (shipY < 0)) {
+            this.player_ship.body.velocity.x = 0;
+            this.player_ship.body.velocity.y = 0;
+        }
         
-    
     },
+*/
+
     
     spawnAsteroid: function () {
         
         var randx = Math.random() * this.game.width,
-            randIndex = Math.floor(Math.random() * (asteroidnames.length-1));
+            randIndex = Math.floor(Math.random() * (asteroidnames.length));
         
         var currasteroid = asteroidnames[randIndex];
 
@@ -219,26 +232,11 @@ This is where you can place objects in the scene or setup a user interface befor
         this.game.physics.p2.enable(this.asteroid);
         
         // if stone is small
-        if(randIndex == 5 || randIndex == 4){
+        if(randIndex == 4){
             this.asteroid.body.velocity.y = highSpeedAsteroid;
         } else {
             this.asteroid.body.velocity.y = baseSpeedAsteroid;
         }
-        
-        if(randIndex == 2){
-            this.asteroid.scale.x = 0.1;
-            this.asteroid.scale.y = 0.1;            
-        }
-        
-        if(randIndex == 1){
-            this.asteroid.scale.x = 0.5;
-            this.asteroid.scale.y = 0.5;                        
-        }
-        
-        if(randIndex == 3){
-            this.asteroid.scale.x = 0.1;
-            this.asteroid.scale.y = 0.1;
-        }    
         
         var angspeed = Math.random() * 2;
         this.asteroid.body.angularVelocity = angspeed;
@@ -248,7 +246,7 @@ This is where you can place objects in the scene or setup a user interface befor
         this.asteroid.scale.y = randscalefactor;
         
         var w = this.asteroid.width,
-        h = this.asteroid.height;
+            h = this.asteroid.height;
         
         var diagonal = Math.sqrt(Math.pow(w, 2)+Math.pow(h, 2));
         
@@ -284,7 +282,6 @@ This is where you can place objects in the scene or setup a user interface befor
         var h = this.player_ship.height/2,
             w = this.player_ship.width/2;
         
-        // upper left corner of the ship
         var startX = this.player_ship.x,
             startY = this.player_ship.y;
 
@@ -293,16 +290,22 @@ This is where you can place objects in the scene or setup a user interface befor
         this.game.physics.p2.enable(this.laser);
         this.laser.body.setCollisionGroup(this.bulletCollGroup);
         
-        this.laser.body.collides(this.asteroidCollGroup, main.hitTarget , this);
-        
+        this.laser.body.collides(this.asteroidCollGroup, main.hitTarget, this);
+        this.laser.body.collides(enemyship.enemyCollGroup, main.hitTarget, this);
+
         
         this.laser.body.velocity.y = yvel*bulletSpeed;
         this.laser.body.velocity.x = xvel*bulletSpeed;
-        this.laser.body.fixedRotation = true;
+        this.laser.body.angle = this.player_ship.angle;
+        
+        
+        
         
         // resets timer
         this.fireTimer = minTimeBetweenPlayerShots;
         
+        console.log("my shoot")
+        console.log(this.laser)
     },
 
     
@@ -310,8 +313,9 @@ This is where you can place objects in the scene or setup a user interface befor
         
         for(var i = 0; i < this.asteroids.children.length; i++){
             if(this.asteroids.children[i].centerY > this.game.height){
-                this.asteroids.children[i].destroy();  
-                playerscore--;
+                this.asteroids.children[i].destroy();
+                diffScore = -1;
+//                playerscore--;
             }
         }
 
@@ -321,6 +325,14 @@ This is where you can place objects in the scene or setup a user interface befor
             bulletY = this.bullets.children[i].centerY;
             if((bulletX > this.game.width || bulletX < 0) || (bulletY > this.game.height || bulletY < 0)){
                 this.bullets.children[i].destroy();
+            }
+        }
+        
+        for(var i = 0; i < enemyship.enemybullets.children.length; i++){
+            bulletX = enemyship.enemybullets.children[i].centerX;
+            bulletY = enemyship.enemybullets.children[i].centerY;
+            if((bulletX > this.game.width || bulletX < 0) || (bulletY > this.game.height || bulletY < 0)){
+                enemyship.enemybullets.children[i].destroy();
             }
         }
         
@@ -348,7 +360,8 @@ This is where you can place objects in the scene or setup a user interface befor
                 //asteroid.destroy();
                 asteroid.sprite.pendingDestroy = true;
             } else {
-                numLives--;
+                //numLives--;
+                diffLives = -1;
                 console.log("OUCH")
                 this.invulnerableTimer = 4*60;
             }
@@ -357,11 +370,12 @@ This is where you can place objects in the scene or setup a user interface befor
         }
 
     },
-
-    hitTarget: function (bullet, asteroid) {
         
-        var size = asteroid.sprite.width;
-        var speed = asteroid.velocity.y;
+
+    hitTarget: function (bullet, target) {
+        
+        var size = target.sprite.width;
+        var speed = target.velocity.y;
         
         var score = 1;
 
@@ -370,22 +384,24 @@ This is where you can place objects in the scene or setup a user interface befor
             score++;
         }
         
-        if(asteroid.sprite.key=="alien"){
-            console.log("i killed an alien")
-            numLives++;
+        if(target.sprite.key=="heart"){
+            console.log("i got a heart")
+            diffLives = 1;
+         //   numLives++;
             score = 0;
         }
         
-        playerscore+=score;
+        diffScore+=score;
+//        playerscore+=score;
         
-        asteroid.sprite.pendingDestroy = true;
+        target.sprite.pendingDestroy = true;
         bullet.sprite.pendingDestroy = true;
         
         var numParts = 20;
         
         while(numParts > 0){
             
-            this.part = this.game.add.sprite(asteroid.x, asteroid.y, 'explosion');
+            this.part = this.game.add.sprite(target.x, target.y, 'explosion');
       
             this.game.physics.p2.enable(this.part);
       
@@ -414,21 +430,32 @@ This is where you can place objects in the scene or setup a user interface befor
     update: function () {
         
         main.updatePlayer();
+     //   main.checkPlayer();
 
-        if(this.invulnerableTimer > 0){
-            this.invulnerableTimer--;
+        if (this.game.input.keyboard.isDown(zbtn)) {
+            main.shoot();
         }
-        if(this.particleDestroyTimer > 0){
-            this.particleDestroyTimer--;
-        }
-        if(this.enemyShipSpawnTimer > 0){
-            this.enemyShipSpawnTimer--;
+        
+        if(enemyship.enemies.children.length >  0 && enemyship.enemyShipMoveTimer <= 0){            
+            enemyship.enemyShipMoveTimer = 60;
+            enemyship.update();
         }
 
-        this.text.setText("Lives: " + numLives + " Score: " + playerscore);
-        //object.tilePosition.y += 2;
+
+        /* update textbox info */
+        if(diffLives != 0 || diffScore != 0){
+            numLives += diffLives;
+            playerscore += diffScore;
+            
+            
+            this.text.setText("Lives: " + numLives + " Score: " + playerscore);
+            diffLives = 0; diffScore = 0;
+        }
+
+        /* scroll background */
         this.background.tilePosition.y +=2;
         
+        /* update timers */
         if(this.asteroidTimer <= 0){
             main.spawnAsteroid();
             this.asteroidTimer = 2;
@@ -436,16 +463,27 @@ This is where you can place objects in the scene or setup a user interface befor
             this.asteroidTimer -= game.time.physicsElapsed;
         }
         
-        this.fireTimer -= game.time.physicsElapsed;
-        
-        main.destroySprites();
-        
-        if (this.game.input.keyboard.isDown(zbtn)) {
-            main.shoot();
+        if(this.invulnerableTimer > 0){
+            this.invulnerableTimer--;
+        }
+        if(this.particleDestroyTimer > 0){
+            this.particleDestroyTimer--;
         }
         
+        if(enemyship.enemyShipSpawnTimer <= 0){
+            enemyship.spawnEnemyShip();
+        } else {
+            enemyship.enemyShipSpawnTimer--;            
+        }
+        
+        if(enemyship.enemyShipMoveTimer > 0){
+            enemyship.enemyShipMoveTimer--;            
+        }
+        
+        this.fireTimer -= game.time.physicsElapsed;
 
-
+        
+        main.destroySprites();
 
 
     }
