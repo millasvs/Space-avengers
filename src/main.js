@@ -328,8 +328,8 @@ This is where you can place objects in the scene or setup a user interface befor
         // resets timer
         this.fireTimer = minTimeBetweenPlayerShots;
         
-        console.log("my shoot")
-        console.log(this.laser)
+        //console.log("my shoot")
+        //console.log(this.laser)
     },
 
     
@@ -459,7 +459,7 @@ This is where you can place objects in the scene or setup a user interface befor
         console.log(target.sprite.key)
         
         if(target.sprite.key){
-            
+            death
         } else {
             main.asteroidDestroyMusic();
         }
