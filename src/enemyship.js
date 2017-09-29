@@ -57,6 +57,7 @@ var enemyship = {
         this.enemylaser.body.velocity.x = -xvel*2 + Math.random()*100;
         this.enemylaser.body.velocity.y = -yvel*2 + Math.random()*100;
 
+        main.playFireMusic();
          
         this.enemylaser.body.angle = -90;
 

@@ -10,7 +10,12 @@ const abtn = Phaser.Keyboard.A;
 const minTimeBetweenPlayerShots = 0.5;
 
 var asteroidnames;
-//var firesounds;
+var firesoundnames;
+var hitsoundnames;
+
+
+var firesounds;
+var hitsounds;
 
 var numLives = 20;
 var playerscore = 0;
@@ -40,24 +45,37 @@ var main = {
         this.game.load.image("laser", "assets/images/bullet-laser.png");
         this.game.load.image("plasma", "assets/images/bullet-plasma.png");
 
+        this.game.load.audio("fire1", "assets/audio/player_fire_01.mp3");
+        this.game.load.audio("fire2", "assets/audio/player_fire_02.mp3");
+        this.game.load.audio("fire3", "assets/audio/player_fire_03.mp3");
+        this.game.load.audio("fire4", "assets/audio/player_fire_04.mp3");
+        this.game.load.audio("fire5", "assets/audio/player_fire_05.mp3");
+        this.game.load.audio("fire6", "assets/audio/player_fire_06.mp3");
         
-        this.game.load.audio("fire1", "assets/audio/player_fire_01.mp3")
-        this.game.load.audio("fire2", "assets/audio/player_fire_02.mp3")
-        this.game.load.audio("fire3", "assets/audio/player_fire_03.mp3")
-        this.game.load.audio("fire4", "assets/audio/player_fire_04.mp3")
-        this.game.load.audio("fire5", "assets/audio/player_fire_05.mp3")
-        this.game.load.audio("fire6", "assets/audio/player_fire_06.mp3")
+        
+        this.game.load.audio("break1", "assets/audio/asteroid_hit_01.mp3");
+        this.game.load.audio("break2", "assets/audio/asteroid_hit_02.mp3");
+        this.game.load.audio("break3", "assets/audio/asteroid_hit_03.mp3");
+        this.game.load.audio("break4", "assets/audio/asteroid_hit_04.mp3");
+        this.game.load.audio("break5", "assets/audio/asteroid_hit_05.mp3");
+        this.game.load.audio("break6", "assets/audio/asteroid_hit_06.mp3");
+        
 
+        this.game.load.audio("heartsound", "assets/audio/mag_level_up.mp3");
+        
+        this.game.load.audio("background-music", "assets/music/bensound-extremeaction.mp3");
         
         asteroidnames = ['asteroid-black', 'asteroid-cool', 'asteroid-normal',
                     'asteroid-boring', 'asteroid-pretty-normal', 'heart'];
         
-        //firesounds = ['fire1', 'fire2', 'fire3', 'fire4', 'fire5', 'fire6'];
+        firesoundnames = ['fire1', 'fire2', 'fire3', 'fire4', 'fire5', 'fire6'];
+        
+        hitsoundnames = ['break1', 'break2', 'break3', 'break4', 'break5', 'break6'];
     
     },
     
     
-    render: function () {
+/*    render: function () {
       
         this.game.debug.body(this.player_ship);
         this.player_ship.body.debug = true;
@@ -70,7 +88,7 @@ var main = {
             this.bullets.children[i].body.debug = true;
         }
         
-    },
+    },*/
     
     
 /*    Phaser will call ‘create’ after calling preload, but still while creating your scene.
@@ -81,6 +99,10 @@ This is where you can place objects in the scene or setup a user interface befor
         this.game.physics.p2.setImpactEvents(true);
         this.background = this.game.add.tileSprite(0, 0, this.game.width, this.game.height, 'space-bg');
 
+        this.background_music = game.add.audio("background-music");
+        
+        this.background_music.play();
+        
         var infosquare = "Lives: " + numLives + " Score: " + playerscore;
         this.text = game.add.text(0, 0, infosquare, {fill: "white"});        
         this.text.setText("Lives: " + numLives + " Score: " + playerscore);
@@ -122,19 +144,29 @@ This is where you can place objects in the scene or setup a user interface befor
         this.bullets.physicsBodyType = Phaser.Physics.P2JS;
         this.fireTimer = minTimeBetweenPlayerShots;
                 
-        
         this.particles = game.add.group();
         this.particles.enableBody = true;
         this.particles.physicsBodyType = Phaser.Physics.P2JS;
         this.particleDestroyTimer = 0.0;
         
-/*        this.sounds = game.add.group();
+        firesounds = [];
         
-        for(var i = 0; i < firesounds.length; i++){
-            var sound = game.add.audio(firesounds[i]);
-            this.sounds.add(sound);
-        }*/
+        for(var i = 0; i < firesoundnames.length; i++){    
+            this.sound = game.add.audio(firesoundnames[i]);
+            firesounds[i] = this.sound;
+        }
+
+        hitsounds = [];
         
+        for(var i = 0; i < hitsoundnames.length; i++){    
+            this.sound = game.add.audio(hitsoundnames[i]);
+            hitsounds[i] = this.sound;
+        }
+
+        
+        this.heartsound = game.add.audio("heartsound");
+        
+     
     },
     
     
@@ -200,26 +232,7 @@ This is where you can place objects in the scene or setup a user interface befor
 
         
     },
-    
-/*
-    checkPlayer: function () {
-        
-        var shipX = this.player_ship.centerX,
-            shipY = this.player_ship.centerY;
-      
-        if (shipX > this.game.width || shipX < 0) {
-            this.player_ship.body.velocity.x = 0;
-            this.player_ship.body.velocity.y = 0;
-        }
-        if ((shipY > this.game.height) || (shipY < 0)) {
-            this.player_ship.body.velocity.x = 0;
-            this.player_ship.body.velocity.y = 0;
-        }
-        
-    },
-*/
 
-    
     spawnAsteroid: function () {
         
         var randx = Math.random() * this.game.width,
@@ -265,6 +278,14 @@ This is where you can place objects in the scene or setup a user interface befor
     },
     
     
+    playFireMusic: function () {
+        
+        var index = Math.floor(Math.random() * firesounds.length);
+        firesounds[index].play();
+        
+    },
+    
+    
     shoot: function() {
         
         if(this.fireTimer > 0){
@@ -298,7 +319,7 @@ This is where you can place objects in the scene or setup a user interface befor
         this.laser.body.velocity.x = xvel*bulletSpeed;
         this.laser.body.angle = this.player_ship.angle;
         
-        
+        main.playFireMusic();
         
         
         // resets timer
@@ -371,6 +392,13 @@ This is where you can place objects in the scene or setup a user interface befor
 
     },
         
+    
+    asteroidDestroyMusic: function () {
+        
+        var index = Math.floor(Math.random() * hitsounds.length);
+        hitsounds[index].play();
+        
+    },
 
     hitTarget: function (bullet, target) {
         
@@ -387,7 +415,7 @@ This is where you can place objects in the scene or setup a user interface befor
         if(target.sprite.key=="heart"){
             console.log("i got a heart")
             diffLives = 1;
-         //   numLives++;
+            this.heartsound.play();
             score = 0;
         }
         
@@ -424,6 +452,8 @@ This is where you can place objects in the scene or setup a user interface befor
             numParts--;
         }
         
+        
+        main.asteroidDestroyMusic();
         
     },
     
