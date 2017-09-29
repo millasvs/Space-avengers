@@ -60,8 +60,11 @@ var main = {
         this.game.load.audio("break5", "assets/audio/asteroid_hit_05.mp3");
         this.game.load.audio("break6", "assets/audio/asteroid_hit_06.mp3");
         
+        this.game.load.audio("death", "assets/audio/player_death_01.mp3");
+        
 
         this.game.load.audio("heartsound", "assets/audio/mag_level_up.mp3");
+
         
         this.game.load.audio("background-music", "assets/music/bensound-extremeaction.mp3");
         
@@ -452,8 +455,14 @@ This is where you can place objects in the scene or setup a user interface befor
             numParts--;
         }
         
+        console.log("HIT TARGET")
+        console.log(target.sprite.key)
         
-        main.asteroidDestroyMusic();
+        if(target.sprite.key){
+            
+        } else {
+            main.asteroidDestroyMusic();
+        }
         
     },
     
