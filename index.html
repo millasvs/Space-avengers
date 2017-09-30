@@ -7,6 +7,8 @@
         <script src="src/main.js"></script>
         <script src="src/enemyship.js"></script>
         <script src="src/gameover.js"></script>
+        <script src="src/start.js"></script>
+
     </head>
     
     <body>
@@ -14,7 +16,7 @@
         <!--
         <h1>Ett litet spel</h1>
         -->
-        <p>[A] + [UP] -- rotate to the left     ||     [A] + [DOWN] -- rotate to the right      ||       [Z] -- shoot       ||     [SHIFT] -- speed up </p>
+
 <!--        <p>Tip: Shoot an alien to gain a life!</p>
 -->        
         </p>
@@ -29,9 +31,11 @@
                 // Register Game States
                 game.state.add('MainGame', main);
                 game.state.add('GameOver', gameover);
+                game.state.add('Start', start);
+
 
                 // Start with the MainGame State
-                game.state.start("MainGame");
+                game.state.start("Start");
             </script>
         </div>
         

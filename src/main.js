@@ -1,12 +1,13 @@
 "use strict";
 const baseSpeedAsteroid = 300;
-const highSpeedAsteroid = 600;
-const baseSpeedPlayer = 200;
+const highSpeedAsteroid = 500;
+const baseSpeedPlayer = 300;
 const highSpeedPlayer = 400;
 const bulletSpeed = 800;
-const zbtn = Phaser.Keyboard.Z;
+const zbtn = Phaser.Keyboard.S;
 const shiftKey = Phaser.Keyboard.SHIFT;
 const abtn = Phaser.Keyboard.A;
+const dbtn = Phaser.Keyboard.D;
 const minTimeBetweenPlayerShots = 0.5;
 
 var asteroidnames;
@@ -17,7 +18,7 @@ var hitsoundnames;
 var firesounds;
 var hitsounds;
 
-var numLives = 20;
+var numLives = 100;
 var playerscore = 0;
 
 var diffLives = 0;
@@ -214,14 +215,14 @@ This is where you can place objects in the scene or setup a user interface befor
         
         // rotate
         if (this.game.input.keyboard.isDown(abtn)) {
-            if (moveup) {
-                this.player_ship.angle -= 10;
-                this.player_ship.body.angle-=10;
+         //   if (moveup) {
+                this.player_ship.angle -= 5;
+  //              this.player_ship.body.angle-=10;
             }
-            if (movedown) {
-                this.player_ship.angle += 10;
-                this.player_ship.body.angle+=10;
-            }
+        else if (this.game.input.keyboard.isDown(dbtn)) {
+                this.player_ship.angle += 5;
+//                this.player_ship.body.angle+=10;
+          //  }
         }
         
         if ((shipX > this.game.width && moveright) || (shipX < 0 && moveleft)) {
@@ -329,7 +330,7 @@ This is where you can place objects in the scene or setup a user interface befor
         this.fireTimer = minTimeBetweenPlayerShots;
         
         //console.log("my shoot")
-        //console.log(this.laser)
+        console.log(this.laser)
     },
 
     
@@ -458,11 +459,13 @@ This is where you can place objects in the scene or setup a user interface befor
         console.log("HIT TARGET")
         console.log(target.sprite.key)
         
+/*
         if(target.sprite.key){
             death
         } else {
-            main.asteroidDestroyMusic();
-        }
+*/
+           // main.asteroidDestroyMusic();
+        //}
         
     },
     
